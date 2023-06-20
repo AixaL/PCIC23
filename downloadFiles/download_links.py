@@ -1,9 +1,3 @@
-from moviepy.editor import *
-import os
-import scipy.io.wavfile as wav
-import librosa
-import opensmile
-import scipy.stats as stats
 import subprocess
 
 #Import data packages
@@ -11,18 +5,7 @@ import os
 import sys
 import glob
 import pandas as pd
-
-#Import audio packages
-import librosa.display
-from scipy.io import wavfile
-import scipy.io.wavfile
 import sys
-
-#Import plotting packages
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import specgram
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 def runcmd(cmd, verbose = False, *args, **kwargs):
 
