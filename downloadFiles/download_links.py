@@ -30,6 +30,6 @@ print(datos_link.head())
 for index, row in datos_link.iterrows():
     file_name = row['name']
     cdn_link = row['link']
-    link_wget= "wget -O "+ file_name +" "+ cdn_link
+    link_wget= "wget "+ cdn_link
     print('"'+link_wget+'"')
     runcmd('"'+link_wget+'"' , verbose = True)
