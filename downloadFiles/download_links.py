@@ -22,8 +22,8 @@ def runcmd(cmd, verbose = False, *args, **kwargs):
     pass
 
 
-ruta_archivo_links = ".\Links190623.txt"
-datos_link = pd.read_csv(ruta_archivo_links, sep="    ",header=None,names=["name", "link"])
+ruta_archivo_links = "Links190623.txt"
+datos_link = pd.read_csv(ruta_archivo_links, sep=" ",header=None,names=["name", "link"])
 
 print(datos_link.head())
 
