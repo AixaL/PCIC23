@@ -41,7 +41,7 @@ def convert_to_wav(audio_dir):
         audioclip = AudioFileClip(audio_dir + video)
         videoWav= video.replace('mp4' , 'wav')
         audioclip.write_audiofile(audio_dir + videoWav) 
-        runcmd('rm '+video+'' , verbose = True)
+        runcmd('rm '+ video , verbose = True)
 
 for file in audio_files:
     file_name = os.path.splitext(os.path.basename(file))[0]
