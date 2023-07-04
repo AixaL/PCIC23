@@ -48,7 +48,7 @@ for file in audio_files:
     print(file_name)
     print(file)
     carpeta = file_name + '_audios'
-    if file_name != 'CCv2_part_10' or file_name != 'CCv2_annotations':
+    if str(file_name) != 'CCv2_part_10' or str(file_name) != 'CCv2_annotations':
         print('entro')
     # loading the temp.zip and creating a zip object
         # with ZipFile(file, 'r') as zObject:
