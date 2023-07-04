@@ -46,6 +46,7 @@ def convert_to_wav(audio_dir):
 for file in audio_files:
     file_name = os.path.splitext(os.path.basename(file))[0]
     print(file_name)
+    print(file)
     # loading the temp.zip and creating a zip object
     with ZipFile(file, 'r') as zObject:
         carpeta = '.\\'+ file_name + '_audios'
