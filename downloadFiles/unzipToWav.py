@@ -47,9 +47,9 @@ for file in audio_files:
     file_name = os.path.splitext(os.path.basename(file))[0]
     print(file_name)
     print(file)
+    carpeta = file_name + '_audios'
     # loading the temp.zip and creating a zip object
-    with ZipFile(file, 'r') as zObject:
-        carpeta = file_name + '_audios'
-        zObject.extractall(path=carpeta)
+    # with ZipFile(file, 'r') as zObject:
+    #     zObject.extractall(path=carpeta)
         
-        convert_to_wav(carpeta+'\\')
+    convert_to_wav(carpeta+'/')
