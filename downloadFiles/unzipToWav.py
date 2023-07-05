@@ -45,6 +45,7 @@ def convert_to_wav(audio_dir):
 
 for file in audio_files:
     file_name = os.path.splitext(os.path.basename(file))[0]
+    file_zip = os.path.splitext(os.path.basename(file))[1]
     print(file_name)
     carpeta = file_name + '_audios'
     if (str(file_name) != 'CCv2_part_14') and (str(file_name) != 'CCv2_annotations'):
@@ -53,5 +54,6 @@ for file in audio_files:
         with ZipFile(file, 'r') as zObject:
             zObject.extractall(path=carpeta)
             convert_to_wav(carpeta+'/')
+        runcmd('rm ' + file_name + file_zip )
     else:
         print('Carpeta No')
