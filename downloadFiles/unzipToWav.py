@@ -51,7 +51,7 @@ def unzip():
         file_zip = os.path.splitext(os.path.basename(file))[1]
         print(file_name)
         carpeta = file_name + '_audios'
-        if (str(file_name) != 'CCv2_part_14') and (str(file_name) != 'CCv2_annotations'):
+        if (str(file_name) != 'CCv2_samples') and (str(file_name) != 'CCv2_annotations'):
             with ZipFile(file, 'r') as zObject:
                 zObject.extractall(path=carpeta)
                 convert_to_wav(carpeta+'/')
