@@ -29,6 +29,7 @@ def convert_to_wav(audio_dir):
     print(audio_dir)
     contenido = os.listdir(audio_dir)
     videos = []
+    videoWav = ''
     try:
         for fichero in contenido:
             if os.path.isfile(os.path.join(audio_dir, fichero)) and fichero.endswith('.mp4'):
@@ -46,8 +47,8 @@ def convert_to_wav(audio_dir):
         print(video)
         runcmd('rm '+ audio_dir + '/' +video , verbose = True)
         runcmd('rm '+ audio_dir + '/' +videoWav , verbose = True)
-        convert_to_wav('CCv2_part_48_audios/')
+        convert_to_wav('CCv2_part_49_audios/')
 
 
-carpeta = 'CCv2_part_48_audios'
+carpeta = 'CCv2_part_49_audios'
 convert_to_wav(carpeta+'/')

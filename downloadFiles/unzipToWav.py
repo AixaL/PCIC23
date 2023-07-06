@@ -31,17 +31,25 @@ def convert_to_wav(audio_dir):
     print(audio_dir)
     contenido = os.listdir(audio_dir)
     videos = []
-    for fichero in contenido:
-        if os.path.isfile(os.path.join(audio_dir, fichero)) and fichero.endswith('.mp4'):
-            print(fichero)
-            videos.append(fichero)
+    videoWav = ''
+    try:
+        for fichero in contenido:
+            if os.path.isfile(os.path.join(audio_dir, fichero)) and fichero.endswith('.mp4'):
+                print(fichero)
+                videos.append(fichero)
 
-    for video in videos:
-        print(audio_dir)
-        audioclip = AudioFileClip(audio_dir + video)
-        videoWav= video.replace('mp4' , 'wav')
-        audioclip.write_audiofile(audio_dir + videoWav) 
+        for video in videos:
+            print(video)
+            audioclip = AudioFileClip(audio_dir + video)
+            videoWav= video.replace('mp4' , 'wav')
+            audioclip.write_audiofile(audio_dir + videoWav) 
+            runcmd('rm '+ audio_dir + '/' +video , verbose = True)
+
+    except:
+        print(video)
         runcmd('rm '+ audio_dir + '/' +video , verbose = True)
+        runcmd('rm '+ audio_dir + '/' +videoWav , verbose = True)
+        convert_to_wav(audio_dir)
 
 def unzip():
     audio_files = [os.path.join(current_directory, file) for file in os.listdir(current_directory) if file.endswith(".zip")]
@@ -58,6 +66,7 @@ def unzip():
             runcmd('rm ' + file_name + file_zip )
         else:
             print('Carpeta No')
+
 
 ruta_archivo_links = "Links190623.txt"
 datos_link = pd.read_csv(ruta_archivo_links, sep=" ",header=None,names=["name", "link"])
