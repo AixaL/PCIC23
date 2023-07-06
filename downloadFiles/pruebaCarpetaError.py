@@ -35,7 +35,7 @@ def convert_to_wav(audio_dir):
             videos.append(fichero)
 
     for video in videos:
-        print(audio_dir)
+        print(video)
         audioclip = AudioFileClip(audio_dir + video)
         videoWav= video.replace('mp4' , 'wav')
         audioclip.write_audiofile(audio_dir + videoWav) 
