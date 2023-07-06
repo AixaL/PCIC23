@@ -44,6 +44,10 @@ def convert_to_wav(audio_dir):
 
     except:
         print(video)
+        runcmd('rm '+ audio_dir + '/' +video , verbose = True)
+        runcmd('rm '+ audio_dir + '/' +videoWav , verbose = True)
+        convert_to_wav('CCv2_part_48_audios/')
+
 
 carpeta = 'CCv2_part_48_audios'
 convert_to_wav(carpeta+'/')
