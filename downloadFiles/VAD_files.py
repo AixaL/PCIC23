@@ -53,7 +53,7 @@ def cleanAudio(rutaArchivo):
     print(nombre_archivo)
     
     # merge all speech chunks to one audio
-    save_audio('./'+nombre_archivo+'_clean',
+    save_audio('./clean_'+nombre_archivo,
                collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE) 
     print('rm '+ rutaArchivo)
     
