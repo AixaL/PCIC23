@@ -38,7 +38,7 @@ def runcmd(cmd, verbose = False, *args, **kwargs):
     pass
 
 
-def cleanAudio(rutaArchivo):
+def cleanAudio(rutaArchivo, directorio):
     wav = read_audio(rutaArchivo, sampling_rate=SAMPLING_RATE)
     # get speech timestamps from full audio file
     speech_timestamps = get_speech_timestamps(wav, model, sampling_rate=SAMPLING_RATE,threshold=0.8, return_seconds=False,window_size_samples=1024)
@@ -53,7 +53,7 @@ def cleanAudio(rutaArchivo):
     print(nombre_archivo)
     
     # merge all speech chunks to one audio
-    save_audio('./clean_'+nombre_archivo,
+    save_audio('/'+directorio+'/clean_'+nombre_archivo,
                collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE) 
     print('rm '+ rutaArchivo)
     
@@ -108,7 +108,7 @@ for directorio in subdirectorios:
         for file in audio_files:
             print(file)
             # cleanAudio(directorio+'/'+file)
-            cleanAudio(file)
+            cleanAudio(file, directorio)
 
 # Obtener todas las carpetas
 #     por cada carpeta obtener el wav y quitarle los silencios
