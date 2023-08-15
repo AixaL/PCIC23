@@ -4,7 +4,7 @@ import os
 import math
 import subprocess
 from moviepy.editor import *
-from IPython.display import Audio
+# from IPython.display import Audio
 from pprint import pprint
 
 current_directory = os.getcwd()
@@ -92,9 +92,9 @@ def cut_wav(audio, tiempo):
         dur_audio.write_audiofile("./cut"+str(tiempo)+'/'+str(i)+'_'+ nombre_archivo)
 
 
-cleanAudio('D:\\Dtataset 2\\12\\0770_portuguese_nonscripted_1.wav') 
+# cleanAudio('D:\\Dtataset 2\\12\\0770_portuguese_nonscripted_1.wav') 
 
-cut_wav('D:\\Dtataset 2\\12\\0770_portuguese_nonscripted_1.wav',20) 
+# cut_wav('D:\\Dtataset 2\\12\\0770_portuguese_nonscripted_1.wav',20) 
 
 current_directory = os.getcwd()
 with os.scandir(current_directory) as ficheros:
