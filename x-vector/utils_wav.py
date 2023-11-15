@@ -10,6 +10,7 @@ import torchaudio
 import torchaudio.transforms as transforms
 import IPython as ip
 from moviepy.editor import AudioFileClip
+from os.path import exists
 
 class utils_wav:
     def __init__(self, carpeta):
@@ -21,17 +22,17 @@ class utils_wav:
         self.SAMPLING_RATE = 16000
 
         USE_ONNX = False 
-        # model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
-        #                             model='silero_vad',
-        #                             force_reload=True,
-        #                             onnx=USE_ONNX)
-        # self.model_clean_audio = model
+        model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+                                    model='silero_vad',
+                                    force_reload=True,
+                                    onnx=USE_ONNX)
+        self.model_clean_audio = model
 
-        # (self.get_speech_timestamps,
-        # self.save_audio,
-        # self.read_audio,
-        # self.VADIterator,
-        # self.collect_chunks) = utils
+        (self.get_speech_timestamps,
+        self.save_audio,
+        self.read_audio,
+        self.VADIterator,
+        self.collect_chunks) = utils
 
 
     def runcmd(cmd, verbose = False, *args, **kwargs):
@@ -51,7 +52,7 @@ class utils_wav:
     def cleanAudio(self, rutaArchivo, directorio,SAMPLING_RATE=16000):
         wav = self.read_audio(rutaArchivo, sampling_rate=SAMPLING_RATE)
         # get speech timestamps from full audio file
-        speech_timestamps = self.get_speech_timestamps(wav, self.model, sampling_rate=SAMPLING_RATE,threshold=0.8, return_seconds=False,window_size_samples=1024)
+        speech_timestamps = self.get_speech_timestamps(wav, self.model_clean_audio, sampling_rate=SAMPLING_RATE,threshold=0.8, return_seconds=False,window_size_samples=1024)
         pprint(speech_timestamps)
         print(len(speech_timestamps))
 
@@ -60,11 +61,20 @@ class utils_wav:
         nombre_archivo = os.path.basename(rutaArchivo)
         nombre_archivo_sin_extension = os.path.splitext(nombre_archivo)[0]
 
-        print(nombre_archivo)
+        print(directorio)
+
+        if os.path.exists(directorio):
+            # self.runcmd('mkdir ' + directorio )
+            os.makedirs(directorio, exist_ok=True)
+            self.save_audio(directorio+'/clean_'+nombre_archivo,
+                    self.collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE)
+        else:
+            os.makedirs(directorio, exist_ok=True)
+            self.save_audio(directorio+'/clean_'+nombre_archivo,
+                self.collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE)
         
         # merge all speech chunks to one audio
-        self.save_audio('/'+directorio+'/clean_'+nombre_archivo,
-                self.collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE) 
+         
         
 
     def cut_wav(self, audio='D:/Dtataset 2/1/cut30/0000_portuguese_nonscripted_1.wav'):
@@ -85,7 +95,8 @@ class utils_wav:
         waveform, sample_rate = torchaudio.load(archivo_temporal)
 
         # Elimina el archivo WAV temporal si es necesario
-        os.remove(archivo_temporal)
+        # os.remove(archivo_temporal)
+        self.runcmd('rm ' + archivo_temporal )
         return waveform , sample_rate
 
             # Exportar el audio cortado

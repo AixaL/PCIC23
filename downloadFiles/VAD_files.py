@@ -51,10 +51,21 @@ def cleanAudio(rutaArchivo, directorio):
     nombre_archivo_sin_extension = os.path.splitext(nombre_archivo)[0]
 
     print(nombre_archivo)
+
+    if os.path.exists(directorio):
+        # self.runcmd('mkdir ' + directorio )
+        os.makedirs(directorio, exist_ok=True)
+        if chuncks > 0:
+            save_audio(directorio+'/clean_'+nombre_archivo, collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE)
+    else:
+        os.makedirs(directorio, exist_ok=True)
+        if chuncks > 0:
+            save_audio(directorio+'/clean_'+nombre_archivo,
+                collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE)
     
-    # merge all speech chunks to one audio
-    save_audio('/'+directorio+'/clean_'+nombre_archivo,
-               collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE) 
+    # # merge all speech chunks to one audio
+    # save_audio('/clean_'+directorio+'/clean_'+nombre_archivo,
+    #            collect_chunks(speech_timestamps[0:chuncks], wav), sampling_rate=SAMPLING_RATE) 
     print('rm '+ rutaArchivo)
     
     runcmd('rm '+ rutaArchivo , verbose = True)
@@ -101,7 +112,7 @@ with os.scandir(current_directory) as ficheros:
     subdirectorios = [fichero.name for fichero in ficheros if fichero.is_dir()]
 
 for directorio in subdirectorios:
-    if 'CCv2' in directorio:
+    if 'CCv2' in directorio and '_audios' in directorio:
         print(directorio)
         audio_files = [os.path.join(directorio, file) for file in os.listdir(directorio) if file.endswith(".wav")]
         print(audio_files)
