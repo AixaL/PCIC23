@@ -4,9 +4,10 @@ import torch.nn.functional as F
 from pooling import StatsPooling, AttnPooling
 from TDNN import TDNN
 
-class Xvector(nn.module):
+# X-vector general para usar la salida 'embedding' y pasarlo por cada clasificador
+class Xvector_Gen(nn.module):
     def __init__(self,dim_inicial, salida=240, dropout=0.0, extract=False):
-        super(Xvector, self).__init__()
+        super(Xvector_Gen, self).__init__()
 
         self.tdnn1 = TDNN(dim_inicial, 512, 5, 1, 2, dropout)
         self.tdnn2 = TDNN(512, 512, 3, 2, 2, dropout)
