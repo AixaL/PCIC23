@@ -48,3 +48,14 @@
 *.webm
 
 # End of https://www.toptal.com/developers/gitignore/api/audio,compressed,video
+*.2
+*.7
+*.6
+*.3
+*.4
+*.5
+*.0
+*.1
+x-vector/.ipynb_checkpoints/prueba-checkpoint.ipynb
+x-vector/.ipynb_checkpoints/Embeddings-checkpoint.ipynb
+x-vector/.ipynb_checkpoints/Untitled-checkpoint.ipynb
