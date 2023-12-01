@@ -1,0 +1,172 @@
+{
+    "os": "Linux-5.15.0-89-generic-x86_64-with-glibc2.17",
+    "python": "3.8.18",
+    "heartbeatAt": "2023-11-30T08:18:36.290854",
+    "startedAt": "2023-11-30T08:18:29.050589",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "Red_Xvec.py",
+    "codePathLocal": "Red_Xvec.py",
+    "codePath": "x-vector/Red_Xvec.py",
+    "git": {
+        "remote": "https://github.com/AixaL/PCIC23.git",
+        "commit": "038f18f061a1bee5cb74cc521f9d49375d3f3796"
+    },
+    "email": "aixa.lievana@gmail.com",
+    "root": "/mnt/b6ae129f-d10f-42f6-b488-51e80af70cd1/AixaPL/Version1/PCIC23",
+    "host": "AR3",
+    "username": "ar",
+    "executable": "/home/ar/miniconda3/envs/Aixa2/bin/python",
+    "cpu_count": 12,
+    "cpu_count_logical": 24,
+    "cpu_freq": {
+        "current": 2474.941416666667,
+        "min": 2200.0,
+        "max": 4000.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 3999.541,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2800.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2800.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 3999.521,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 4000.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 937.3305015563965,
+            "used": 678.2190895080566
+        }
+    },
+    "gpu": "NVIDIA GeForce RTX 3070 Ti",
+    "gpu_count": 2,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 3070 Ti",
+            "memory_total": 8589934592
+        },
+        {
+            "name": "NVIDIA GeForce RTX 3060",
+            "memory_total": 12884901888
+        }
+    ],
+    "memory": {
+        "total": 31.249713897705078
+    }
+}

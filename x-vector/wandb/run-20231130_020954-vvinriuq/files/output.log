@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "Red_Xvec.py", line 896, in <module>
+    red_transformerSpeech, mejor_transformerSpeech, hist_transformerSpeech = entrena(red,
+  File "Red_Xvec.py", line 576, in entrena
+    for Xlote, ylote_edades, ylote_genero, ylote_reg, *_ in entdl:
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 630, in __next__
+    data = self._next_data()
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 674, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 51, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 51, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "Red_Xvec.py", line 195, in __getitem__
+    audio = AudioFileClip(path)
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/moviepy/audio/io/AudioFileClip.py", line 70, in __init__
+    self.reader = FFMPEG_AudioReader(filename, fps=fps, nbytes=nbytes,
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/moviepy/audio/io/readers.py", line 65, in __init__
+    self.buffer_around(1)
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/moviepy/audio/io/readers.py", line 247, in buffer_around
+    self.buffer =  self.read_chunk(self.buffersize)
+  File "/home/ar/miniconda3/envs/Aixa2/lib/python3.8/site-packages/moviepy/audio/io/readers.py", line 113, in read_chunk
+    s = self.proc.stdout.read(L)
+KeyboardInterrupt

@@ -1,0 +1,97 @@
+Época 0:
+ ENTRENAMIENTO:
+weighted_F1(E) = 0.170,
+ Perdida(E) = 51611.859,
+Accuracy_Edades(E) = 9.848,
+ Accuracy_Genero(E) = 0.758,
+MSE_Edad(E) = 51304.350,
+ VALIDACIÓN:
+weighted_F1(V) = 0.155,
+  Perdida(V) = 49940.421,
+  Accuracy_Edades(V) = 9.688
+ Accuracy_Genero(V) = 0.000
+ MSE_Edad(V) = 48990.613
+ ---------------------------------------------------------------------
+Época 1:
+ ENTRENAMIENTO:
+weighted_F1(E) = 0.170,
+ Perdida(E) = 50771.429,
+Accuracy_Edades(E) = 14.962,
+ Accuracy_Genero(E) = 4.735,
+MSE_Edad(E) = 50487.536,
+ VALIDACIÓN:
+weighted_F1(V) = 0.163,
+  Perdida(V) = 101020.380,
+  Accuracy_Edades(V) = 11.563
+ Accuracy_Genero(V) = 2.656
+ MSE_Edad(V) = 99640.576
+ ---------------------------------------------------------------------
+Época 2:
+ ENTRENAMIENTO:
+weighted_F1(E) = 0.120,
+ Perdida(E) = 49855.007,
+Accuracy_Edades(E) = 25.492,
+ Accuracy_Genero(E) = 3.523,
+MSE_Edad(E) = 49599.595,
+ VALIDACIÓN:
+weighted_F1(V) = 0.405,
+  Perdida(V) = 80078.223,
+  Accuracy_Edades(V) = 29.219
+ Accuracy_Genero(V) = 0.000
+ MSE_Edad(V) = 79058.600
+ ---------------------------------------------------------------------
+Época 3:
+ ENTRENAMIENTO:
+weighted_F1(E) = 0.093,
+ Perdida(E) = 49112.324,
+Accuracy_Edades(E) = 41.932,
+ Accuracy_Genero(E) = 2.159,
+MSE_Edad(E) = 48888.275,
+ VALIDACIÓN:
+weighted_F1(V) = 0.475,
+  Perdida(V) = 124200.903,
+  Accuracy_Edades(V) = 37.344
+ Accuracy_Genero(V) = 3.594
+ MSE_Edad(V) = 123315.710
+ ---------------------------------------------------------------------
+Época 4:
+ ENTRENAMIENTO:
+weighted_F1(E) = 0.098,
+ Perdida(E) = 48524.299,
+Accuracy_Edades(E) = 53.333,
+ Accuracy_Genero(E) = 2.500,
+MSE_Edad(E) = 48325.426,
+ VALIDACIÓN:
+weighted_F1(V) = 0.589,
+  Perdida(V) = 197216.565,
+  Accuracy_Edades(V) = 48.750
+ Accuracy_Genero(V) = 3.281
+ MSE_Edad(V) = 196393.860
+ ---------------------------------------------------------------------
+Época 5:
+ ENTRENAMIENTO:
+weighted_F1(E) = 0.120,
+ Perdida(E) = 48087.722,
+Accuracy_Edades(E) = 63.750,
+ Accuracy_Genero(E) = 2.273,
+MSE_Edad(E) = 47909.360,
+ VALIDACIÓN:
+weighted_F1(V) = 0.603,
+  Perdida(V) = 159160.852,
+  Accuracy_Edades(V) = 53.281
+ Accuracy_Genero(V) = 4.375
+ MSE_Edad(V) = 158128.918
+ ---------------------------------------------------------------------
+Época 6:
+ ENTRENAMIENTO:
+weighted_F1(E) = 0.127,
+ Perdida(E) = 47735.370,
+Accuracy_Edades(E) = 70.720,
+ Accuracy_Genero(E) = 0.530,
+MSE_Edad(E) = 47577.657,
+ VALIDACIÓN:
+weighted_F1(V) = 0.506,
+  Perdida(V) = 710108.691,
+  Accuracy_Edades(V) = 40.313
+ Accuracy_Genero(V) = 0.000
+ MSE_Edad(V) = 708312.598
