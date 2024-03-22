@@ -57,15 +57,18 @@ def unzip():
     for file in audio_files:
         file_name = os.path.splitext(os.path.basename(file))[0]
         file_zip = os.path.splitext(os.path.basename(file))[1]
-        print(file_name)
-        carpeta = file_name + '_audios'
-        if (str(file_name) != 'CCv2_samples') and (str(file_name) != 'CCv2_annotations'):
-            with ZipFile(file, 'r') as zObject:
-                zObject.extractall(path=carpeta)
-                convert_to_wav(carpeta+'/')
-            runcmd('rm ' + file_name + file_zip )
-        else:
-            print('Carpeta No')
+        numero = int(file_name.split('_')[2].split('.')[0])
+            
+        if 15 <= numero <= 70:
+            print(file_name)
+            carpeta = file_name + '_audios'
+            if (str(file_name) != 'CCv2_samples') and (str(file_name) != 'CCv2_annotations'):
+                with ZipFile(file, 'r') as zObject:
+                    zObject.extractall(path=carpeta)
+                    convert_to_wav(carpeta+'/')
+                runcmd('rm ' + file_name + file_zip )
+            else:
+                print('Carpeta No')
 
 
 unzip()

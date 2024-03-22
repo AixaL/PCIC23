@@ -15,6 +15,22 @@
 *.ogg
 *.flac
 
+### Text ###
+*.doc
+*.docx
+*.log
+*.msg
+*.pages
+*.rtf
+*.txt
+*.wpd
+*.wps
+*.WAV
+*.WRD
+*.TXT
+*.PHN
+*.wandb
+
 ### Compressed ###
 *.7z
 *.deb
