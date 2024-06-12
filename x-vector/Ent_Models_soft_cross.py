@@ -51,7 +51,8 @@ import pandas as pd
 import copy
 
 # Redes
-from ModelSeq import QuartzNet_single_gender, QuartzNet_single_age, Ensamble 
+from Models_Cross import QuartzNet_Cross1, QuartzNet_Cross2, LSTMDvector_Cross, Xvector_Cross
+from Models_Soft2 import QuartzNet_Cross2_Small, QuartzNet_Cross4
 
 
 #-------------------------------------------------------------------
@@ -112,24 +113,23 @@ hop_length = n_fft // 2
 #-------------------------------------- TIMIT ------------------------------
 class TIMIT(Dataset):
 
-    def __init__(self, df, waveform_tsfm=identity, label_tsfm=identity, cut=False, cut_sec=1, task=3):
+    def __init__(self, df, waveform_tsfm=identity, label_tsfm=identity, cut=False, cut_sec=1, task1=0, task2=1):
         self.waveform_tsfm = waveform_tsfm
         self.label_tsfm = label_tsfm
         self.df = df
         self.cut = cut
         self.cut_sec = cut_sec
-        self.task = task
+
+        self.task1 = task1
+        self.task2 = task2
 
     def __getitem__(self, i):
         # print(i)
         dato = self.df.iloc[i]
         path = dato['path_from_data_dir']
-        # edad = dato['Age_Group']
-        # edad = dato['AGE_GENDER_class']
-        edad = dato['Age_3Group_class']
-        genero = dato['gender_class']
+        edad = dato['age_group']
         edad_num = dato['age']
-        # genero = dato['gender']
+        genero = dato['gender']
 
         directorio_actual = os.getcwd()
         directorio_actual +='/temp'
@@ -162,14 +162,12 @@ class TIMIT(Dataset):
         x = self.waveform_tsfm(waveform)
 
 
-        if self.task == 0:
-            return x, genero
-        elif self.task == 1:
-            return x, edad
-        elif self.task == 2:
-            return x, edad_num
-        else:
-            return x, edad , genero , edad_num
+        # if self.task1 == 0 and self.task2==1:
+        #     return x, genero, edad
+        # elif self.task1 == 0 and self.task2 == 2:
+        #     return x, genero, edad_num
+        # else:
+        return x, edad , genero , edad_num
     
     def __len__(self):
         return (len(self.df))
@@ -178,24 +176,24 @@ class TIMIT(Dataset):
     
 class CCV2(Dataset):
 
-    def __init__(self, df, waveform_tsfm=identity, label_tsfm=identity, cut=False, cut_sec=1, task=3):
+    def __init__(self, df, waveform_tsfm=identity, label_tsfm=identity, cut=False, cut_sec=1, task1=0, task2=1):
         self.waveform_tsfm = waveform_tsfm
         self.label_tsfm = label_tsfm
         self.df = df
         self.cut = cut
         self.cut_sec = cut_sec
-        self.task = task
+
+
+        self.task1 = task1
+        self.task2 = task2
 
     def __getitem__(self, i):
         # print(i)
         dato = self.df.iloc[i]
         path = dato['file_path']
-        # edad = dato['Age_Group']
-        # edad = dato['AGE_GENDER_class']
-        edad = dato['Age_3Group_class']
-        genero = dato['gender_class']
+        edad = dato['age_group']
         edad_num = dato['age']
-        # genero = dato['gender']
+        genero = dato['gender']
 
         directorio_actual = os.getcwd()
         directorio_actual +='/temp'
@@ -227,14 +225,12 @@ class CCV2(Dataset):
 
         x = self.waveform_tsfm(waveform)
 
-        if self.task == 0:
-            return x, genero
-        elif self.task == 1:
-            return x, edad
-        elif self.task == 2:
-            return x, edad_num
-        else:
-            return x, edad , genero , edad_num
+        # if self.task1 == 0 and self.task2==1:
+        #     return x, genero, edad
+        # elif self.task1 == 0 and self.task2 == 2:
+        #     return x, genero, edad_num
+        # else:
+        return x, edad , genero , edad_num
     
     def __len__(self):
         return (len(self.df))
@@ -244,24 +240,23 @@ class CCV2(Dataset):
     
 class CommonVoice2(Dataset):
 
-    def __init__(self, df, waveform_tsfm=identity, label_tsfm=identity, cut=False, cut_sec=1, task=3):
+    def __init__(self, df, waveform_tsfm=identity, label_tsfm=identity, cut=False, cut_sec=1, task1=0, task2=1):
         self.waveform_tsfm = waveform_tsfm
         self.label_tsfm = label_tsfm
         self.df = df
         self.cut = cut
         self.cut_sec = cut_sec
-        self.task = task
+
+        self.task1 = task1
+        self.task2 = task2
 
     def __getitem__(self, i):
         # print(i)
         dato = self.df.iloc[i]
         path = dato['path']
-        # edad = dato['Age_Group']
-        # edad = dato['AGE_GENDER_class']
-        edad = dato['Age_3Group_class']
-        genero = dato['gender_class']
-        edad_num = dato['age']
-        
+        edad = dato['age']
+        edad_num = dato['age_numerico']
+        genero = dato['gender']
 
         directorio_actual = os.getcwd()
         directorio_actual +='/temp'
@@ -299,14 +294,12 @@ class CommonVoice2(Dataset):
         # waveform, sample_rate, label, *_ = super().__getitem__(i)
         x = self.waveform_tsfm(waveform)
 
-        if self.task == 0:
-            return x, genero
-        elif self.task == 1:
-            return x, edad
-        elif self.task == 2:
-            return x, edad_num
-        else:
-            return x, edad , genero , edad_num
+        # if self.task1 == 0 and self.task2==1:
+        #     return x, genero, edad
+        # elif self.task1 == 0 and self.task2 == 2:
+        #     return x, genero, edad_num
+        # else:
+        return x, edad , genero , edad_num
     
     def __len__(self):
         return (len(self.df))
@@ -364,27 +357,22 @@ class WaveformPadTruncate(nn.Module):
 # CCV2 classes
 CLASSES_AGE = (
     'teens', 'twenties', 'thirties', 'fourties', 'fifties',
-    'sixties', 'seventies', 'eighties+'
+    'sixties', 'seventies', 'eighties'
 )
 
 # CCV2 classes
 CLASSES_AGE_3 = (
     'Young', 'Adult', 'Senior')
 
-# CCV2 classes
-CLASSES_AGE_6 = (
-    'Young Female','Young Male', 'Adult Female','Adult Male', 'Senior Female', 'Senior Male')
-
 NUM_CLASSES_GEN = 2
 NUM_CLASES_AGE = len(CLASSES_AGE)
 NUM_CLASES_AGE_3 = len(CLASSES_AGE_3)
-NUM_CLASES_AGE_6 = len(CLASSES_AGE_6)
 
-df_Timit = pd.read_csv("./data/TRAIN_AGE_GENDER.csv")
-# df_Timit = pd.read_csv("./data/train_data_all_completo_3Ages.csv")
-df_CCv2 = pd.read_csv('./Corpus/audios_CCV2_Train_AGE_GENDER.csv')
-# df_CCv2 = pd.read_csv('./Corpus/audios_CCV2_Train_3Ages.csv')
-df_CommonV = pd.read_csv('./data/cv-corpus-17.0-2024-03-15/en/train_8class_AGE_GENDER.csv')
+# df_Timit = pd.read_csv("./data/train_data_all_completo.csv")
+# df_CCv2 = pd.read_csv('./audios_CCV2_Train.csv')
+
+df_Timit = pd.read_csv("./data/train_data_all_completo_3Ages.csv")
+df_CCv2 = pd.read_csv('./Corpus/audios_CCV2_Train_3Ages.csv')
 
 df_ent, df_val = train_test_split(df_CCv2,
                                   test_size=0.2,
@@ -414,9 +402,7 @@ ds_ent = CCV2(
     # si va a haber corte de audio
     cut=True,
     # corte de cuantos segundos
-    cut_sec=1,
-    # Tarea que se va a hacer
-    task=1
+    cut_sec=1
 )
 
 dl_ent= DataLoader(
@@ -439,9 +425,7 @@ ds_val = CCV2(
     # si va a haber corte de audio
     cut=True,
     # corte de cuantos segundos
-    cut_sec=1,
-    # Tarea que se va a hacer
-    task=1
+    cut_sec=1
 )
 
 dl_val= DataLoader(
@@ -460,90 +444,100 @@ dl_val= DataLoader(
 # 2 - Age Regression
 # 3 - All Multitask
 
-def paso_ent(modelo,funcion_perdida,metrica, opt, X, y, task):
+def paso_ent(modelo,fp_edades,fp_genero,fp_reg,metrica_edades,metrica_genero, metrica_edadN, opt, X, y_edad, y_genero, y_reg, task1=0, task2=1):
   
   # se ponen los gradientes asociados a los parámetros a actualizaren en cero
-#   print(X)
-  # se propagan las entradas para obtener las predicciones               
-  y_hat = modelo(X) 
+  opt.zero_grad()
 
-#   print(y_hat)
+  # Le damos un peso a cada tarea
+  w_genero = 1.0
+  w_edad = 1.0
+  w_reg = 1.0
+
+  # se propagan las entradas para obtener las predicciones        
+  if task1==0 and task2==1:
+     y_hat_edad, y_hat_genero = modelo(X) 
+
+     # sacamos las probabilidades de las clases de edad
+     y_prob = F.softmax(y_hat_edad, 1)
+
+     # sacamos las clases
+     y_pred = torch.argmax(y_prob, 1).detach().cpu().numpy()
 
 
-  # Sacamos las perdidas de cada tarea
-  if task == 0: #Genero
-    #  print(y_hat.shape)
-    #  print(y.shape)
-     perdida = F.binary_cross_entropy(y_hat, y.float()) #fp_edades
-  elif task == 1: # Age Class
-     perdida = F.cross_entropy(y_hat, y) #fp_genero
-  else: # Age Regression
-     perdida = F.mse_loss(y_hat, y.float()) #fp_reg
-  
+     # Sacamos las perdidas de cada tarea
+     perdida_genero = F.binary_cross_entropy(y_hat_genero, y_genero.float()) #fp_genero
+     perdida_edad = F.cross_entropy(y_hat_edad, y_edad) #fp_edades
 
-  # Calcular la pérdida total como la suma ponderada de las pérdidas individuales
-  perdida_total = perdida.float()
+     # Calcular la pérdida total como la suma ponderada de las pérdidas individuales
+     perdida_total = w_genero * perdida_genero.float() + w_edad * perdida_edad.float()
+
+  elif task1==0 and task2==2:
+     y_hat_reg, y_hat_genero = modelo(X)
+
+
+     # Sacamos las perdidas de cada tarea
+     perdida_genero = F.binary_cross_entropy(y_hat_genero, y_genero.float()) #fp_genero
+     perdida_reg = F.mse_loss(y_hat_reg, y_reg.float()) #fp_reg
+
+     # Calcular la pérdida total como la suma ponderada de las pérdidas individuales
+     perdida_total = w_genero * perdida_genero.float() + w_reg * perdida_reg.float()
+
+
+  perdida_total = perdida_total.float()
 
   opt.zero_grad()
   perdida_total.backward() # se obtienen los gradientes
   opt.step() # se actualizan todos los parámetros del modelo
 
-
   with th.no_grad():
     perdida_paso = perdida_total.cpu().numpy()
 
-    # return perdida_paso, metricas_paso
+    if task1==0 and task2==1:
+       metrica_genero_paso = accuracy_score(y_genero,y_hat_genero.round())
+       metrica_edad_paso = accuracy_score(y_edad, y_pred)
+       macrof1= f1_score(y_edad.cpu(), y_pred, average='macro')
+       
+       return perdida_paso,metrica_genero_paso, metrica_edad_paso, macrof1
+       
+    elif task1==0 and task2==2:
+       metrica_genero_paso = accuracy_score(y_genero,y_hat_genero.round())
+       metrica_reg_paso = metrica_edadN(y_hat_reg, y_reg)
 
-    if task == 0:
-       metrica_genero_paso = accuracy_score(y,y_hat.round())
+       return perdida_paso, metrica_genero_paso, metrica_reg_paso
 
-       return perdida_paso, metrica_genero_paso
-    elif task == 1:
-        # sacamos las probabilidades de las clases de edad
-        y_prob = F.softmax(y_hat, 1)
-        
-        # sacamos las clases
-        y_pred = torch.argmax(y_prob, 1).detach().cpu().numpy()
-
-        metrica_edad_paso = accuracy_score(y, y_pred)
-        weightedf1= f1_score(y.cpu(), y_pred, average='weighted')
-        
-        return perdida_paso, metrica_edad_paso, weightedf1
-    
-    else:
-       metrica_reg_paso = metrica(y_hat, y)
-       return perdida_paso, metrica_reg_paso
+  
 
 
 
-def entrena(modelo,fp_edades,fp_genero, fp_reg, metrica_edades, metrica_genero, metrica_edadN, opt, entdl, valdl, disp, ckptpath, n_epocas=10, tbdir='runs/', task=0):
+
+def entrena(modelo,fp_edades,fp_genero, fp_reg, metrica_edades, metrica_genero, metrica_edadN, opt, entdl, valdl, disp, ckptpath, n_epocas=10, tbdir='runs/', task1=0, task2=1):
  
   n_lotes_ent = len(entdl)
   n_lotes_val = len(valdl)
+  
+  if task1==0 and task2==1:
+     hist = {'perdida_ent':np.zeros(n_epocas),
+          'perdida_val': np.zeros(n_epocas),
 
-  if task == 0:
+          'macroF1_ent': np.zeros(n_epocas),
+          'macroF1_val': np.zeros(n_epocas),
+          
+          'Accuracy_Edades_ent': np.zeros(n_epocas),
+          'Accuracy_Edades_val': np.zeros(n_epocas),
+
+          'Accuracy_Genero_ent': np.zeros(n_epocas),
+          'Accuracy_Genero_val': np.zeros(n_epocas)}
+  elif task1==0 and task2==2:
      hist = {'perdida_ent':np.zeros(n_epocas),
           'perdida_val': np.zeros(n_epocas),
 
           'Accuracy_Genero_ent': np.zeros(n_epocas),
-          'Accuracy_Genero_val': np.zeros(n_epocas)}
-  elif task == 1:
-     hist = {'perdida_ent':np.zeros(n_epocas),
-          'perdida_val': np.zeros(n_epocas),
-
-          'weightedF1_ent': np.zeros(n_epocas),
-          'weightedF1_val': np.zeros(n_epocas),
-          
-          'Accuracy_Edades_ent': np.zeros(n_epocas),
-          'Accuracy_Edades_val': np.zeros(n_epocas)}
-  else:
-     hist = {'perdida_ent':np.zeros(n_epocas),
-          'perdida_val': np.zeros(n_epocas),
+          'Accuracy_Genero_val': np.zeros(n_epocas),
 
           'MSE_Edad_ent': np.zeros(n_epocas),
           'MSE_Edad_val': np.zeros(n_epocas)}
      
-  
 
 #   tbwriter = SummaryWriter(tbdir)
   perdida_min = th.inf
@@ -551,108 +545,132 @@ def entrena(modelo,fp_edades,fp_genero, fp_reg, metrica_edades, metrica_genero, 
 
 
   for e in range(n_epocas):
-    # ---------------------------------------- ENTRENAMIENTO -------------------------------------------------------------------
+    # bucle de entrenamiento
     modelo.train()
-    for Xlote, ylote, *_ in entdl:
+    for Xlote, ylote_edades, ylote_genero, ylote_reg, *_ in entdl:
+      if (torch.any(torch.isnan(Xlote)))|(torch.any(torch.isnan(ylote_edades))):
+        print("NaN values found in", e)
+        break;
       Xlote = Xlote.to(disp)
-      ylote = ylote.to(disp)
+      ylote_edades = ylote_edades.to(disp)
+      ylote_genero = ylote_genero.to(disp)
+      ylote_reg = ylote_reg.to(disp)
 
-      # perdida_paso, perdida_edad_paso, perdida_genero_paso, perdida_reg_paso, weightedf1
-      if task == 0:
-         perdida_paso, metrica_genero_paso = paso_ent(modelo, fp_genero, metrica_genero, opt, Xlote, ylote, task=task)
-
-         hist['Accuracy_Genero_ent'][e] += metrica_genero_paso
-
-      elif task == 1:
-         perdida_paso, metrica_edad_paso, weightedf1 = paso_ent(modelo, fp_edades, metrica_edades, opt, Xlote, ylote, task=task)
-
-         hist['weightedF1_ent'][e] += weightedf1
-         hist['Accuracy_Edades_ent'][e] += metrica_edad_paso
-      else:
-         metrica_edadN = nn.MSELoss(size_average=None, reduce=None, reduction='mean')
-         perdida_paso, metrica_reg_paso = paso_ent(modelo,fp_reg, metrica_edadN, opt, Xlote, ylote, task=task)
-         hist['MSE_Edad_ent'][e] += metrica_reg_paso
+      # perdida_paso, perdida_edad_paso, perdida_genero_paso, perdida_reg_paso, macrof1
+      if task1==0 and task2==1:
+         perdida_paso, metrica_genero_paso,metrica_edad_paso, macrof1 = paso_ent(modelo, fp_edades, fp_genero, 
+                                                                                                    fp_reg, metrica_edades, 
+                                                                                                    metrica_genero, metrica_edadN, 
+                                                                                                    opt, Xlote, ylote_edades, 
+                                                                                                    ylote_genero, ylote_reg,task1=0, task2=task2)
          
-      hist['perdida_ent'][e] += perdida_paso
+      elif task1==0 and task2==2:
+         perdida_paso, metrica_genero_paso, metrica_reg_paso = paso_ent(modelo, fp_edades, fp_genero, 
+                                                                                                    fp_reg, metrica_edades, 
+                                                                                                    metrica_genero, metrica_edadN, 
+                                                                                                    opt, Xlote, ylote_edades, 
+                                                                                                    ylote_genero, ylote_reg,task1=0, task2=task2)
+         
 
+      if task1==0 and task2==1:
+         hist['perdida_ent'][e] += perdida_paso
+         hist['macroF1_ent'][e] += macrof1
+         hist['Accuracy_Edades_ent'][e] += metrica_edad_paso
+         hist['Accuracy_Genero_ent'][e] += metrica_genero_paso
+         
+      elif task1==0 and task2==2:
+         hist['perdida_ent'][e] += perdida_paso
+         hist['Accuracy_Genero_ent'][e] += metrica_genero_paso
+         hist['MSE_Edad_ent'][e] += metrica_reg_paso
+      
 
     # ---------------------------------------- VALIDACIÓN -------------------------------------------------------------------
       
     modelo.eval()
+
     with th.no_grad():
-      for Xlote, ylote,*_  in valdl:
+      for Xlote, ylote_edades, ylote_genero, ylote_reg, *_  in valdl:
 
         Xlote = Xlote.to(disp)
-        ylote = ylote.to(disp)
+        ylote_edades = ylote_edades.to(disp)
+        ylote_genero = ylote_genero.to(disp)
+        ylote_reg = ylote_reg.to(disp)
 
-        y_hat = modelo(Xlote)
+        w_genero = 1.0
+        w_edad = 1.0
+        w_reg = 1.0
 
-
-        if task==0:
-           y_hat = y_hat.squeeze().float()
-           perdida = F.binary_cross_entropy(y_hat, ylote.float()) #fp_edades
-
-           metrica_genero_val = accuracy_score(ylote,y_hat.round())
-           hist['Accuracy_Genero_val'][e] += metrica_genero_val
-
-        elif task==1:
-           
+        if task1==0 and task2==1:
+           y_hat_edades, y_hat_genero = modelo(Xlote)
+           y_hat_genero = y_hat_genero.squeeze().float()
            # sacamos las probabilidades
-           y_prob = F.softmax(y_hat, 1)
+           y_prob = F.softmax(y_hat_edades, 1)
            # sacamos las clases
            y_pred = torch.argmax(y_prob, 1)
 
-           weightedf1= f1_score(ylote.cpu(), y_pred.cpu().numpy(), average='weighted')
-           perdida = F.cross_entropy(y_hat, ylote) #fp_genero
+           macrof1= f1_score(ylote_edades.cpu(), y_pred.cpu().numpy(), average='macro')
 
-           metrica_edad_val = accuracy_score(ylote, y_pred )
-           hist['weightedF1_val'][e] += weightedf1
+           perdida_genero = F.binary_cross_entropy(y_hat_genero, ylote_genero.float()) #fp_edades
+           perdida_edad = F.cross_entropy(y_hat_edades, ylote_edades) #fp_genero
+
+           # Calcular la pérdida total como la suma ponderada de las pérdidas individuales
+           perdida_total = w_genero * perdida_genero.float() + w_edad * perdida_edad.float()
+
+           metrica_genero_val = accuracy_score(ylote_genero,y_hat_genero.round())
+           metrica_edad_val = accuracy_score(ylote_edades, y_pred )
+
+           hist['perdida_val'][e] += perdida_total
+           hist['macroF1_val'][e] += macrof1
            hist['Accuracy_Edades_val'][e] += metrica_edad_val
-
-        else:
-           y_hat = y_hat.squeeze().float()
-           perdida = F.mse_loss(y_hat, ylote) #fp_reg
-
-           metrica_reg_val = metrica_edadN(y_hat, ylote)
-           hist['MSE_Edad_val'][e] += metrica_reg_val
+           hist['Accuracy_Genero_val'][e] += metrica_genero_val
            
+        elif task1==0 and task2==2:
+           y_hat_genero, y_hat_reg = modelo(Xlote)
+           y_hat_genero = y_hat_genero.squeeze().float()
+           y_hat_reg = y_hat_reg.squeeze().float()
 
-        # Calcular la pérdida total como la suma ponderada de las pérdidas individuales
-        perdida_total = perdida.float()
-        hist['perdida_val'][e] += perdida_total
+           perdida_genero = F.binary_cross_entropy(y_hat_genero, ylote_genero.float()) #fp_edades
+           perdida_reg = F.mse_loss(y_hat_reg, ylote_reg) #fp_reg
 
-    if task ==0:
-       hist['Accuracy_Genero_ent'][e] /= n_lotes_ent
-       hist['Accuracy_Genero_ent'][e] *= 100   
+           # Calcular la pérdida total como la suma ponderada de las pérdidas individuales
+           perdida_total = w_genero * perdida_genero.float() + w_reg * perdida_reg.float()
 
-       hist['Accuracy_Genero_val'][e] /= n_lotes_val
-       hist['Accuracy_Genero_val'][e] *= 100   
+           metrica_genero_val = accuracy_score(ylote_genero,y_hat_genero.round())
+           metrica_reg_val = metrica_edadN(y_hat_reg, ylote_reg)
+           hist['perdida_val'][e] += perdida_total
+           hist['Accuracy_Genero_val'][e] += metrica_genero_val
+           hist['MSE_Edad_val'][e] += metrica_reg_val
 
-    elif task == 1:
+    if task1==0 and task2==1:
+       hist['macroF1_ent'][e] /=  n_lotes_ent
+       hist['macroF1_ent'][e] *= 100
+
        hist['Accuracy_Edades_ent'][e] /= n_lotes_ent
        hist['Accuracy_Edades_ent'][e] *= 100
 
+       hist['macroF1_val'][e] /=  n_lotes_val
+       hist['macroF1_val'][e] *= 100
+
        hist['Accuracy_Edades_val'][e] /= n_lotes_val
        hist['Accuracy_Edades_val'][e] *= 100
-
-       hist['weightedF1_ent'][e] /=  n_lotes_ent
-       hist['weightedF1_ent'][e] *= 100
-
-       hist['weightedF1_val'][e] /=  n_lotes_val
-       hist['weightedF1_val'][e] *= 100
-
-    else:
+       
+    elif task1==0 and task2==2:
+       
        hist['MSE_Edad_ent'][e] /= n_lotes_ent
+
        hist['MSE_Edad_val'][e] /= n_lotes_val
-    
+
+
+    hist['Accuracy_Genero_ent'][e] /= n_lotes_ent
+    hist['Accuracy_Genero_ent'][e] *= 100 
+
+    hist['Accuracy_Genero_val'][e] /= n_lotes_val
+    hist['Accuracy_Genero_val'][e] *= 100
 
     hist['perdida_ent'][e] /=  n_lotes_ent
-    # hist['perdida_ent'][e] =  hist['perdida_ent'][e]*100
-
     hist['perdida_val'][e] /=  n_lotes_val
     # hist['perdida_val'][e] =  hist['perdida_val'][e]*100
-
-
+    
     # guardamos checkpoint y copiamos pesos y sesgos del modelo
     # actual si disminuye la metrica a monitorear
     if hist['perdida_val'][e] < perdida_min:
@@ -660,66 +678,55 @@ def entrena(modelo,fp_edades,fp_genero, fp_reg, metrica_edades, metrica_genero, 
       guarda_ckpt(ckptpath, modelo, e, opt)
 
     # registra_info_tboard(tbwriter, e, hist)
-    
-    # ------------------------------------ Guardamos los datos -------------------------------------------------
-    
-    if task==0:
-        wandb.log({"Val Accuracy Gender": hist["Accuracy_Genero_val"][e],
+    if task1==0 and task2==1:
+       wandb.log({"Val Accuracy Gender": hist["Accuracy_Genero_val"][e],
                "Train Accuracy Gender": hist["Accuracy_Genero_ent"][e],
 
-               "Val Total Loss": hist["perdida_val"][e],
-               "Train Total Loss": hist["perdida_ent"][e] })
-        
-        print(f'\nÉpoca {e}:\n '
-          'ENTRENAMIENTO: \n'
-          f'Perdida(E) = {hist["perdida_ent"][e]:.3f}, \n'
-          f'Accuracy_Genero(E) = {hist["Accuracy_Genero_ent"][e]:.3f},\n'
-         
-          'VALIDACIÓN: \n'
-          f'Perdida(V) = {hist["perdida_val"][e]:.3f},\n  '
-          f'Accuracy_Genero(V) = {hist["Accuracy_Genero_val"][e]:.3f}\n '
-          '---------------------------------------------------------------------')
-    elif task==1:
-        wandb.log({
-               "Val F1" : hist["weightedF1_val"][e],
-               "Train F1" : hist["weightedF1_ent"][e],
+               "Val F1" : hist["macroF1_val"][e],
+               "Train F1" : hist["macroF1_ent"][e],
 
                "Val Accuracy Ages" : hist["Accuracy_Edades_val"][e],
                "Train Accuracy Ages" : hist["Accuracy_Edades_ent"][e],
-    
+        
                "Val Total Loss": hist["perdida_val"][e],
                "Train Total Loss": hist["perdida_ent"][e] })
-        
-        print(f'\nÉpoca {e}:\n '
+       
+
+       print(f'\nÉpoca {e}:\n '
           'ENTRENAMIENTO: \n'
+          f'macro_F1(E) = {hist["macroF1_ent"][e]:.3f},\n '
           f'Perdida(E) = {hist["perdida_ent"][e]:.3f}, \n'
-          f'weighted_F1(E) = {hist["weightedF1_ent"][e]:.3f},\n '
           f'Accuracy_Edades(E) = {hist["Accuracy_Edades_ent"][e]:.3f},\n '
-          
+          f'Accuracy_Genero(E) = {hist["Accuracy_Genero_ent"][e]:.3f},\n'
+         
           'VALIDACIÓN: \n'
+          f'macro_F1(V) = {hist["macroF1_val"][e]:.3f},\n  '
           f'Perdida(V) = {hist["perdida_val"][e]:.3f},\n  '
-          f'weighted_F1(V) = {hist["weightedF1_val"][e]:.3f},\n  '
           f'Accuracy_Edades(V) = {hist["Accuracy_Edades_val"][e]:.3f}\n '
+          f'Accuracy_Genero(V) = {hist["Accuracy_Genero_val"][e]:.3f}\n '
+
           '---------------------------------------------------------------------')
-    else:
-        wandb.log({
+    elif task1==0 and task2==2:
+       wandb.log({"Val Accuracy Gender": hist["Accuracy_Genero_val"][e],
+               "Train Accuracy Gender": hist["Accuracy_Genero_ent"][e],
+            
                "Val MSE Age" : hist["MSE_Edad_val"][e],
                "Train MSE Age" : hist["MSE_Edad_ent"][e],
 
                "Val Total Loss": hist["perdida_val"][e],
                "Train Total Loss": hist["perdida_ent"][e] })
-        
-        print(f'\nÉpoca {e}:\n '
+       
+
+       print(f'\nÉpoca {e}:\n '
           'ENTRENAMIENTO: \n'
           f'Perdida(E) = {hist["perdida_ent"][e]:.3f}, \n'
+          f'Accuracy_Genero(E) = {hist["Accuracy_Genero_ent"][e]:.3f},\n'
           f'MSE_Edad(E) = {hist["MSE_Edad_ent"][e]:.3f},\n '
-          
           'VALIDACIÓN: \n'
           f'Perdida(V) = {hist["perdida_val"][e]:.3f},\n  '
+          f'Accuracy_Genero(V) = {hist["Accuracy_Genero_val"][e]:.3f}\n '
           f'MSE_Edad(V) = {hist["MSE_Edad_val"][e]:.3f}\n '
           '---------------------------------------------------------------------')
-    
-
   return modelo, mejor_modelo, hist
 
 # -------------------------------- Entrenamiento modelos -----------------------------------------------------
@@ -727,21 +734,21 @@ def entrena(modelo,fp_edades,fp_genero, fp_reg, metrica_edades, metrica_genero, 
 
 train_batch = next(iter(dl_ent))
 
-print(train_batch[0].shape)
-
 
 TASA_AP = 0.0001
 TASA_AP2 ='0.0001'
 
-DATASET = 'TIMIT'
+# DATASET = 'TIMIT'
+DATASET = 'CCV2'
 
 N_EPOCAS=100
 
-DC = 'cuda:0' if th.cuda.is_available() else 'cpu'
-# LOGDIR = './logs/Dvector/Base'
-# LOGDIR = './logs/Quartznet/Ensamble'
-LOGDIR = './logs/Quartznet/Base/Junio'
-# LOGDIR = './logs/Xvector'
+DC = 'cuda:1' if th.cuda.is_available() else 'cpu'
+# LOGDIR = './logs/Quartznet'
+# LOGDIR = './logs/Dvector'
+# LOGDIR = './logs/Cross_stitch/cross2'
+# LOGDIR = './logs/Xvector/Cross_stitch/cross1'
+LOGDIR = './logs/Dvector/Cross_stitch/cross1'
 
 #-------------------------------
 
@@ -751,31 +758,12 @@ LOGDIR = './logs/Quartznet/Base/Junio'
 # 2 - Age Regression
 # 3 - All Multitask
 
-# red= Xvector((30*63), num_classes=NUM_CLASES_AGE, task=2)
-# red= LSTMDvector(63, num_classes=NUM_CLASES_AGE, task=1)
+# red= Xvector_Cross((30*63), num_classes=NUM_CLASES_AGE,dropout=0.3, task1=0, task2=1)
+red= LSTMDvector_Cross(63, num_classes=NUM_CLASES_AGE, task1=0, task2=1)
+# red= LSTMDvector(63, num_classes=NUM_CLASES_AGE, task=3)
+# red = QuartzNet_Cross2(30,num_classes=NUM_CLASES_AGE_3, task1=0, task2=1)
 
-
-# modelA = QuartzNet_single_gender(30,num_classes=NUM_CLASES_AGE_3, task=0)
-modelB = QuartzNet_single_age(30,num_classes=NUM_CLASES_AGE_3, task=1)
-# modelB = QuartzNet_single_age(60,num_classes=NUM_CLASES_AGE_3, task=1)
-
-# checkpoint = torch.load('./logs/Quartznet/Ensamble/red_QuartzNet_Gender_TIMIT_0.0001_30MFCC_BATCH50_1.pt')
-
-# modelA.load_state_dict(checkpoint['model_state_dict'])
-
-# red = Ensamble(modelA, modelB)
-
-# checkpoint2 = torch.load('./logs/Quartznet/Ensamble/red_QuartzNet_Serial_AGE_TIMIT_0.00001_30MFCC_BATCH50_2.pt')
-
-# red.load_state_dict(checkpoint2['model_state_dict'])
-
-# print(red)
-
-red= modelB
-
-# red = QuartzNet_single(30,num_classes=NUM_CLASES_AGE_3, task=1)
-
-#-------------------------------------------------------
+#-------------------------------
 
 red.to(DC)
 perdida_edades = nn.CrossEntropyLoss(weight=None,reduction='mean',label_smoothing=0.01)
@@ -786,30 +774,27 @@ metrica_edadN = nn.MSELoss(size_average=None, reduce=None, reduction='mean')
 
 opt = Adam(red.parameters(), lr=TASA_AP)
 
-NETWORK_NAME = '/red_QuartzNet_3AGE_'+DATASET+'_'+TASA_AP2+'_30MFCC_BATCH50_TIMIT_1.pt'
+redName = '/red_Dvector_CrossStitch_1_Multitask_'+DATASET+'_'+TASA_AP2+'_1Macro.pt'
 
 # start a new wandb run to track this script
 wandb.init(
     # set the wandb project where this run will be logged
-    # project="QuartzNet_ensamble",
-    project="Modelos Base",
-    # project="Quartznet",
+    project="Dvector_Cross Cross-stitch",
     
     # track hyperparameters and run metadata
     config={
     "learning_rate": TASA_AP,
-    "architecture": "QuartzNet 3Age TIMIT 1",
+    "architecture": "Dvector_Cross Cross-stitch 1cross",
     "dataset": DATASET,
     "epochs": N_EPOCAS,
+    "Batch": BATCH_SIZE,
     "edadWeight":1.0,
     "genWeight":1.0,
     "regWeight":1.0,
     "segundos":1,
-    "mfcc":30,
-    "ages":3,
-    "opt":'Adam',
-    "networkName": NETWORK_NAME,
-    "BATCCH_SIZE":BATCH_SIZE
+    "red": redName,
+    "ages": 8,
+    "mfcc":30
     }
 )
 
@@ -820,6 +805,6 @@ red_Xvect2, mejor_Xvect2, hist_Xvect2 = entrena(red, perdida_edades, perdida_gen
                                    dl_ent,
                                    dl_val,
                                    DC,
-                                   LOGDIR + NETWORK_NAME,
+                                   LOGDIR + redName,
                                    n_epocas=N_EPOCAS,
-                                   tbdir = LOGDIR, task=1)
+                                   tbdir = LOGDIR, task1=0, task2=1)

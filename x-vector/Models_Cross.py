@@ -140,8 +140,10 @@ class CrossStitch(nn.Module):
     def forward(self, input1, input2):
 
 
-        input1_flattened = input1.view(input1.size(0), -1)
-        input2_flattened = input2.view(input2.size(0), -1)
+        # input1_flattened = input1.view(input1.size(0), -1)
+        input1_flattened = input1.reshape(input1.size(0), -1)
+        input2_flattened = input2.reshape(input1.size(0), -1)
+        # input2_flattened = input2.view(input2.size(0), -1)
 
         concatenated_inputs = torch.cat((input1_flattened, input2_flattened), dim=1)
 
@@ -375,6 +377,7 @@ class QuartzNet_Cross2(nn.Module):
         x2 = self.dropOut4_2(x2)
         x2 = self.block4_task2(x2)
 
+        print(x1.shape)
 
         #Cross3
         output1, output2 = self.cross_stitch2(x1,x2)
@@ -409,7 +412,7 @@ class QuartzNet_Cross2(nn.Module):
 
 class LSTMDvector_Cross(nn.Module):
     """LSTM-based d-vector."""
-    def __init__(self, input_size, hidden_size=256 , embedding_size=256, num_layers=3,task1=0, task2=1, num_classes=3):
+    def __init__(self, input_size, hidden_size=128 , embedding_size=128, num_layers=1,task1=0, task2=1, num_classes=3):
         super(LSTMDvector_Cross, self).__init__()
 
         self.task1= task1
@@ -421,17 +424,17 @@ class LSTMDvector_Cross(nn.Module):
         self.lin_task1 = nn.Linear(input_size, input_size)
         self.norm_task1 = nn.BatchNorm1d(1)
         self.lstm1_task1 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
-        self.lstm2_task1 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
-        self.lstm3_task1 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
+        self.lstm2_task1 = nn.LSTM(hidden_size, hidden_size, num_layers=num_layers,dropout=0.3)
+        self.lstm3_task1 = nn.LSTM(hidden_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
 
 
         self.lin_task2 = nn.Linear(input_size, input_size)
         self.norm_task2 = nn.BatchNorm1d(1)
         self.lstm1_task2 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
-        self.lstm2_task2 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
-        self.lstm3_task2 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
+        self.lstm2_task2 = nn.LSTM(hidden_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
+        self.lstm3_task2 = nn.LSTM(hidden_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
 
-        self.cross_stitch1 = CrossStitch(hidden_size)
+        self.cross_stitch1 = CrossStitch(hidden_size*60)
 
         # Capa lineal para obtener el d-vector
         self.linear_task1 = nn.Linear(hidden_size, embedding_size)
@@ -448,27 +451,46 @@ class LSTMDvector_Cross(nn.Module):
 
         batch_size = x.size(0)
         # x = x.unsqueeze(1)  # Add a batch dimension
-        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
-        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
+        h0_1_task1 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
+        c0_1_task1  = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
 
-        lstm_out1_task1, _ = self.lstm1(x, (h0, c0))
-        lstm_out1_task2, _ = self.lstm1(x, (h0, c0))
+        h0_1_task2  = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
+        c0_1_task2 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
+
+        h0_2_task1  = torch.zeros(self.num_layers, 30, self.hidden_size).requires_grad_()
+        c0_2_task1 = torch.zeros(self.num_layers, 30, self.hidden_size).requires_grad_()
+
+        h0_2_task2  = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
+        c0_2_task2 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
+
+        lstm_out1_task1, _ = self.lstm1_task1(x, (h0_1_task1, c0_1_task1))
+        lstm_out1_task2, _ = self.lstm1_task2(x, (h0_1_task2, c0_1_task2))
+
+        # print(lstm_out1_task1.shape)
 
         output1, output2 = self.cross_stitch1(lstm_out1_task1, lstm_out1_task2)
 
-        lstm_out2_task1, _ = self.lstm2(output1)
-        lstm_out2_task2, _ = self.lstm2(output2)
+        # print(output1.shape)
 
 
-        lstm_out3_task1, _ = self.lstm3(lstm_out2_task1)
-        lstm_out3_task2, _ = self.lstm3(lstm_out2_task2)
+        lstm_out2_task1, _ = self.lstm2_task1(output1,(h0_2_task1, c0_2_task1))
+        lstm_out2_task2, _ = self.lstm2_task2(output2,(h0_2_task2, c0_2_task2))
 
-        d_vector_task1 = self.linear(lstm_out3_task1[:, -1, :])
+        # print(lstm_out2_task1.shape)
 
+        lstm_out3_task1, _ = self.lstm3_task1(lstm_out2_task1)
+        lstm_out3_task2, _ = self.lstm3_task2(lstm_out2_task2)
 
-        d_vector_task2 = self.linear(lstm_out3_task2[:, -1, :])
+        d_vector_task1 = self.linear_task1(lstm_out3_task1[:, -1, :])
+
+        d_vector_task2 = self.linear_task2(lstm_out3_task2[:, -1, :])
+
+        
 
         genero, edad = self.frontEnd(d_vector_task1, d_vector_task2)
+
+        # print(genero)
+        
 
         return edad.float(), genero.float()
 
@@ -494,7 +516,7 @@ class Xvector_Cross(nn.Module):
         self.tdnn4_task2 = TDNN(400, 400, 1, 1, 0, dropout)
         self.tdnn5_task2 = TDNN(400, 1500, 1, 1, 0, dropout)
 
-        self.cross_stitch1 = CrossStitch(400)
+        self.cross_stitch1 = CrossStitch((400*3)*2)
 
         # Statistics pooling layer
         self.pooling_task1 = StatsPooling()
@@ -517,6 +539,8 @@ class Xvector_Cross(nn.Module):
 
         tdnn1_task1 = self.tdnn1_task1(x)
         tdnn1_task2 = self.tdnn1_task2(x)
+
+        # print(tdnn1_task1.shape)
 
         output1, output2 = self.cross_stitch1(tdnn1_task1, tdnn1_task2)
 

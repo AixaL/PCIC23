@@ -10,6 +10,26 @@ from speechbrain.pretrained import EncoderClassifier
 
 # ---------------------------------- Modulo FrontEnd ----------------------------------
 
+class LMCL(nn.Module):
+    def __init__(self, embedding_size, num_classes, s, m):
+        super(LMCL, self).__init__()
+        self.embedding_size = embedding_size
+        self.num_classes = num_classes
+        self.s = s
+        self.m = m
+        self.weights = nn.Parameter(torch.Tensor(num_classes, embedding_size))
+        nn.init.kaiming_normal_(self.weights)
+
+    def forward(self, embedding, label):
+        assert embedding.size(1) == self.embedding_size, 'embedding size wrong'
+        logits = F.linear(F.normalize(embedding), F.normalize(self.weights))
+        margin = torch.zeros_like(logits)
+        margin.scatter_(1, label.view(-1, 1), self.m)
+        m_logits = self.s * (logits - margin)
+        return logits, m_logits, self.s * F.normalize(embedding), F.normalize(self.weights)
+
+
+
 # Tasks
 # 0 - Gender
 # 1 - Age class
@@ -27,9 +47,13 @@ class FrotEnd(nn.Module):
             nn.Linear(dim_inicial,dim_inicial),
             nn.ReLU(),
             nn.BatchNorm1d(dim_inicial),
-            nn.Linear(dim_inicial,clases_age),
+            # nn.Linear(dim_inicial,clases_age),
             # nn.Softmax()
         )
+
+        # s - parámetro de escala que ajusta la sensibilidad de la función de perdida
+        # m - Parámetro de margen que controla el margen entre las clases
+        self.lmcl = LMCL(dim_inicial, clases_age , s=8, m=0.2)
 
         self.gender = nn.Sequential(
             nn.Linear(dim_inicial,dim_inicial),
@@ -46,18 +70,19 @@ class FrotEnd(nn.Module):
             nn.Linear(dim_inicial,1)
         )
 
-    def forward(self, x1, x2):
+    def forward(self, x1, x2, label_age):
 
         if self.task1 == 0 and self.task2== 1: #Gender
             gender = self.gender(x1)
             gender = gender.squeeze().float()
 
             age_classes = self.age_classification(x2)
-            age_classes = age_classes
+            _, age_logit, __, ___  = self.lmcl(age_classes, label_age)
+            # age_classes = self.lmcl(age_classes)
 
-            return gender, age_classes
+            return gender, age_logit
         
-        elif self.task1 == 0 and self.task2 ==2: #Age class
+        elif self.task == 0 and self.task2 ==2: #Age class
 
             gender = self.gender(x1)
             gender = gender.squeeze().float()
@@ -167,22 +192,21 @@ class QuartzNet_Cross1(nn.Module):
 
         self.num_classes = num_classes
 
-        self.c1_task1 = conv_bn_act(n_mels, 32, kernel_size=33,padding=(33-1)//2, stride=2)
-        self.c1_task2 = conv_bn_act(n_mels, 32, kernel_size=33, padding=(33-1)//2, stride=2)
-        self.block1_task1 = QnetBlock(32, 32, 33, 1, R=1)
-        self.block2_task1 = QnetBlock(32, 64, 39, 1, R=1)
-        self.block3_task1 = QnetBlock(64, 64, 51, 1, R=1)
-        self.block4_task1 = QnetBlock(64, 64, 63, 1, R=1)
-        self.block5_task1 = QnetBlock(64, 64, 75, 1, R=1)
+        self.c1_task1 = conv_bn_act(n_mels, 128, kernel_size=33,padding=(33-1)//2, stride=2)
+        self.c1_task2 = conv_bn_act(n_mels, 128, kernel_size=33, padding=(33-1)//2, stride=2)
+        self.block1_task1 = QnetBlock(128, 128, 33, 1, R=1)
+        self.block2_task1 = QnetBlock(128, 256, 39, 1, R=1)
+        self.block3_task1 = QnetBlock(256, 256, 51, 1, R=1)
+        self.block4_task1 = QnetBlock(256, 256, 63, 1, R=1)
+        self.block5_task1 = QnetBlock(256, 256, 75, 1, R=1)
 
-        self.block1_task2 = QnetBlock(32, 32, 33, 1, R=1)
-        self.block2_task2 = QnetBlock(32, 64, 39, 1, R=1)
-        self.block3_task2 = QnetBlock(64, 64, 51, 1, R=1)
-        self.block4_task2 = QnetBlock(64, 64, 63, 1, R=1)
-        self.block5_task2 = QnetBlock(64, 64, 75, 1, R=1)
+        self.block1_task2 = QnetBlock(128, 128, 33, 1, R=1)
+        self.block2_task2 = QnetBlock(128, 256, 39, 1, R=1)
+        self.block3_task2 = QnetBlock(256, 256, 51, 1, R=1)
+        self.block4_task2 = QnetBlock(256, 256, 63, 1, R=1)
+        self.block5_task2 = QnetBlock(256, 256, 75, 1, R=1)
     
-        self.cross_stitch1 = CrossStitch((64*63)*2) #16384
-        # self.cross_stitch1 = CrossStitch((256*32)*2) #16384
+        self.cross_stitch1 = CrossStitch((256*32)*2) #16384
         # self.cross_stitch1 = CrossStitch((128*32)*2) #16384
         # self.cross_stitch2 = CrossStitch(2 * 256)
         # self.cross_stitch3 = CrossStitch(2*256)
@@ -193,19 +217,19 @@ class QuartzNet_Cross1(nn.Module):
         # self.lin_task1 = nn.Linear(256, 256)
         # self.lin_task2 = nn.Linear(256, 256)
 
-        self.c2_task1 = conv_bn_act(64, 64, kernel_size=87,padding="same")
-        self.c2_task2 = conv_bn_act(64, 64, kernel_size=87,padding="same")
+        self.c2_task1 = conv_bn_act(256, 256, kernel_size=87,padding="same")
+        self.c2_task2 = conv_bn_act(256, 256, kernel_size=87,padding="same")
 
-        self.c3_task1 = conv_bn_act(64, 128, kernel_size=1)
-        self.c3_task2 = conv_bn_act(64, 128, kernel_size=1)
+        self.c3_task1 = conv_bn_act(256, 512, kernel_size=1)
+        self.c3_task2 = conv_bn_act(256, 512, kernel_size=1)
 
-        self.c4_task1 = conv_bn_act(128, 64, kernel_size=1, dilation=2)
-        self.c4_task2 = conv_bn_act(128, 64, kernel_size=1, dilation=2)
+        self.c4_task1 = conv_bn_act(512, 256, kernel_size=1, dilation=2)
+        self.c4_task2 = conv_bn_act(512, 256, kernel_size=1, dilation=2)
 
-        self.frontEnd = FrotEnd(64 * 63, clases_age= self.num_classes, task1=self.task1, task2=self.task2)
+        self.frontEnd = FrotEnd(256 * 32, clases_age= self.num_classes, task1=self.task1, task2=self.task2)
 
 
-    def forward(self, x):
+    def forward(self, x, label_age):
 
         c1_task1 = self.c1_task1(x)
         c1_task2 = self.c1_task2(x)
@@ -246,8 +270,6 @@ class QuartzNet_Cross1(nn.Module):
         x2 = self.block5_task2(x2)
         # x2 = self.pooling_task2(x2)
 
-        # print(x1.shape)
-
         #Cross3
         output1, output2 = self.cross_stitch1(x1,x2)
         
@@ -263,14 +285,10 @@ class QuartzNet_Cross1(nn.Module):
         x1 = self.c4_task1(x1)
         x2 = self.c4_task2(x2)
 
-        # print(x1.shape)
-
-        X1_flattened = x1.view(-1, 64*63)
-        X2_flattened = x2.view(-1, 64*63)
+        X1_flattened = x1.view(-1, 256 * 32)
+        X2_flattened = x2.view(-1, 256 * 32)
         
-        genero, edad = self.frontEnd(X1_flattened, X2_flattened)
-
-        # print(genero)
+        genero, edad = self.frontEnd(X1_flattened, X2_flattened, label_age)
 
         return edad.float(), genero.float()
         
@@ -284,74 +302,57 @@ class QuartzNet_Cross2(nn.Module):
 
         self.num_classes = num_classes
 
-        self.c1_task1 = conv_bn_act(n_mels, 32, kernel_size=33,padding=(33-1)//2, stride=2)
-        self.c1_task2 = conv_bn_act(n_mels, 32, kernel_size=33, padding=(33-1)//2, stride=2)
+        self.c1_task1 = conv_bn_act(n_mels, 64, kernel_size=33,padding=(33-1)//2, stride=2)
+        self.c1_task2 = conv_bn_act(n_mels, 64, kernel_size=33, padding=(33-1)//2, stride=2)
         
         self.dropOut1 = nn.Dropout(p=0.2)
-        self.block1_task1 = QnetBlock(32, 32, 33, 1, R=1)
+        self.block1_task1 = QnetBlock(64, 64, 33, 1, R=1)
         self.dropOut2 = nn.Dropout(p=0.2)
-        self.block2_task1 = QnetBlock(32, 64, 39, 1, R=1)
+        self.block2_task1 = QnetBlock(64, 128, 39, 1, R=1)
         self.dropOut3 = nn.Dropout(p=0.2)
-        self.block3_task1 = QnetBlock(64, 64, 51, 1, R=1)
+        self.block3_task1 = QnetBlock(128, 128, 51, 1, R=1)
         self.dropOut4 = nn.Dropout(p=0.2)
-        self.block4_task1 = QnetBlock(64, 64, 63, 1, R=1)
+        self.block4_task1 = QnetBlock(128, 128, 63, 1, R=1)
         self.dropOut5 = nn.Dropout(p=0.2)
-        self.block5_task1 = QnetBlock(64, 64, 75, 1, R=1)
+        self.block5_task1 = QnetBlock(128, 128, 75, 1, R=1)
 
         self.dropOut1_2 = nn.Dropout(p=0.2)
-        self.block1_task2 = QnetBlock(32, 32, 33, 1, R=1)
+        self.block1_task2 = QnetBlock(64, 64, 33, 1, R=1)
         self.dropOut2_2 = nn.Dropout(p=0.2)
-        self.block2_task2 = QnetBlock(32, 64, 39, 1, R=1)
+        self.block2_task2 = QnetBlock(64, 128, 39, 1, R=1)
         self.dropOut3_2 = nn.Dropout(p=0.2)
-        self.block3_task2 = QnetBlock(64, 64, 51, 1, R=1)
+        self.block3_task2 = QnetBlock(128, 128, 51, 1, R=1)
         self.dropOut4_2 = nn.Dropout(p=0.2)
-        self.block4_task2 = QnetBlock(64, 64, 63, 1, R=1)
+        self.block4_task2 = QnetBlock(128, 128, 63, 1, R=1)
         self.dropOut5_2 = nn.Dropout(p=0.2)
-        self.block5_task2 = QnetBlock(64, 64, 75, 1, R=1)
+        self.block5_task2 = QnetBlock(128, 128, 75, 1, R=1)
     
         # self.cross_stitch1 = CrossStitch((256*32)*2) #16384
         # self.cross_stitch1 = CrossStitch((128*32)*2) #16384
-        self.cross_stitch1 = CrossStitch(4032) # 2sec
-        # self.cross_stitch1 = CrossStitch(8064) # 2sec
-        # self.cross_stitch2 = CrossStitch(16128) # 2sec
-        self.cross_stitch2 = CrossStitch(8064) # 2sec
-  
+        self.cross_stitch1 = CrossStitch((64*32)*2) #16384
+        self.cross_stitch2 = CrossStitch((128*32)*2)
+        # self.cross_stitch2 = CrossStitch((256*32)*2)
+        # self.cross_stitch3 = CrossStitch(2*256)
 
-        self.c2_task1 = conv_bn_act(64, 64, kernel_size=87,padding="same")
-        self.c2_task2 = conv_bn_act(64, 64, kernel_size=87,padding="same")
+        self.pooling_task1 = StatsPooling()
+        self.pooling_task2 = StatsPooling()
 
-        # self.c3_task1 = conv_bn_act(128, 256, kernel_size=1)
-        # self.c3_task2 = conv_bn_act(128, 256, kernel_size=1)
+        # self.lin_task1 = nn.Linear(256, 256)
+        # self.lin_task2 = nn.Linear(256, 256)
 
-        # self.c4_task1 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
-        # self.c4_task2 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
+        self.c2_task1 = conv_bn_act(128, 128, kernel_size=87,padding="same")
+        self.c2_task2 = conv_bn_act(128, 128, kernel_size=87,padding="same")
 
-        self.age_classification = nn.Sequential(
-            nn.Linear( 64*63, 128),
-            nn.ReLU(),
-            nn.BatchNorm1d(128),
-            nn.Linear(128,3),
-            nn.Softmax()
-        )
+        self.c3_task1 = conv_bn_act(128, 256, kernel_size=1)
+        self.c3_task2 = conv_bn_act(128, 256, kernel_size=1)
 
-        self.gender = nn.Sequential(
-            nn.Linear( 64*63, 128),
-            nn.ReLU(),
-            nn.BatchNorm1d(128),
-            nn.Linear( 128,1),
-            nn.Sigmoid()
-        )
+        self.c4_task1 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
+        self.c4_task2 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
 
-        self.age_regression = nn.Sequential(
-            nn.Linear( 64*63, 128),
-            nn.ReLU(),
-            nn.BatchNorm1d(128),
-            nn.Linear( 128,1)
-        )
-        # self.frontEnd = FrotEnd(128 * 32, clases_age= self.num_classes, task1=self.task1, task2=self.task2)
+        self.frontEnd = FrotEnd(128 * 32, clases_age= self.num_classes, task1=self.task1, task2=self.task2)
 
 
-    def forward(self, x):
+    def forward(self, x, label_age):
 
         x1 = self.c1_task1(x)
         x2 = self.c1_task2(x)
@@ -414,146 +415,6 @@ class QuartzNet_Cross2(nn.Module):
         x2 = self.c2_task2(x2)
 
 
-        # x1 = self.c3_task1(x1)
-        # x2 = self.c3_task2(x2)
-
-
-        # x1 = self.c4_task1(x1)
-        # x2 = self.c4_task2(x2)
-
-        # print(x1.shape)
-
-        X1_flattened = x1.view(-1, 64*63)
-        X2_flattened = x2.view(-1, 64*63)
-
-        genero = self.gender(X1_flattened)
-        edad = self.age_regression(X2_flattened)
-
-        # print(genero.shape)
-
-        # print(edad.shape)
-
-        # edad = self.age_classification(X2_flattened)
-        
-        # # genero, edad = self.frontEnd(X1_flattened, X2_flattened)
-
-        return edad.float(), genero.float()
-        
-#------------------------ Quartz 4 cross ALL-------------------------
-
-class QuartzNet_Cross4(nn.Module):
-    def __init__(self, n_mels, num_classes=8, task1=0, task2=1):
-        super().__init__()
-        self.task1= task1
-        self.task2= task2
-
-        self.num_classes = num_classes
-
-        self.c1_task1 = conv_bn_act(n_mels, 64, kernel_size=33,padding=(33-1)//2, stride=2)
-        self.c1_task2 = conv_bn_act(n_mels, 64, kernel_size=33, padding=(33-1)//2, stride=2)
-        
-        self.dropOut1 = nn.Dropout(p=0.2)
-        self.block1_task1 = QnetBlock(64, 64, 33, 1, R=1)
-        self.dropOut2 = nn.Dropout(p=0.2)
-        self.block2_task1 = QnetBlock(64, 128, 39, 1, R=1)
-        self.dropOut3 = nn.Dropout(p=0.2)
-        self.block3_task1 = QnetBlock(128, 128, 51, 1, R=1)
-        self.dropOut4 = nn.Dropout(p=0.2)
-        self.block4_task1 = QnetBlock(128, 128, 63, 1, R=1)
-        self.dropOut5 = nn.Dropout(p=0.2)
-        self.block5_task1 = QnetBlock(128, 128, 75, 1, R=1)
-
-        self.dropOut1_2 = nn.Dropout(p=0.2)
-        self.block1_task2 = QnetBlock(64, 64, 33, 1, R=1)
-        self.dropOut2_2 = nn.Dropout(p=0.2)
-        self.block2_task2 = QnetBlock(64, 128, 39, 1, R=1)
-        self.dropOut3_2 = nn.Dropout(p=0.2)
-        self.block3_task2 = QnetBlock(128, 128, 51, 1, R=1)
-        self.dropOut4_2 = nn.Dropout(p=0.2)
-        self.block4_task2 = QnetBlock(128, 128, 63, 1, R=1)
-        self.dropOut5_2 = nn.Dropout(p=0.2)
-        self.block5_task2 = QnetBlock(128, 128, 75, 1, R=1)
-    
-    
-        self.cross_stitch1 = CrossStitch((64*32)*2) #16384
-        self.cross_stitch2 = CrossStitch((128*32)*2)
-        self.cross_stitch3 = CrossStitch((128*32)*2)
-        self.cross_stitch4 = CrossStitch((128*32)*2)
-        # self.cross_stitch2 = CrossStitch((256*32)*2)
-        # self.cross_stitch3 = CrossStitch(2*256)
-
-        self.pooling_task1 = StatsPooling()
-        self.pooling_task2 = StatsPooling()
-
-
-        self.c2_task1 = conv_bn_act(128, 128, kernel_size=87,padding="same")
-        self.c2_task2 = conv_bn_act(128, 128, kernel_size=87,padding="same")
-
-        self.c3_task1 = conv_bn_act(128, 256, kernel_size=1)
-        self.c3_task2 = conv_bn_act(128, 256, kernel_size=1)
-
-        self.c4_task1 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
-        self.c4_task2 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
-
-        self.frontEnd = FrotEnd(128 * 32, clases_age= self.num_classes, task1=self.task1, task2=self.task2)
-
-
-    def forward(self, x):
-
-        x1 = self.c1_task1(x)
-        x2 = self.c1_task2(x)
-
-        #BLOQUE 1
-
-        #Red 1
-        x1 = self.dropOut1(x1)
-        x1 = self.block1_task1(x1)
-        # x1 = self.pooling(x1)
-
-        #Red 2
-        x2 = self.dropOut1_2(x2)
-        x2 = self.block1_task2(x2)
-        # x2 = self.pooling(x2)
-
-
-        #Cross1
-        output1, output2 = self.cross_stitch1(x1,x2)
-
-        #BLOQUE 2
-        #Red 1
-        x1 = self.block2_task1(output1)
-        #Red 2
-        x2 = self.block2_task2(output2)
-
-        #Cross2
-        output1, output2 = self.cross_stitch2(x1,x2)
-
-        #BLOQUE 3
-        #Red 1
-        x1 = self.block3_task1(output1)
-        
-        x2 = self.block3_task2(output2)
-
-        #Cross3
-        output1, output2 = self.cross_stitch3(x1,x2)
-    
-        x1 = self.block4_task1(output1)
-        
-        x2 = self.block4_task2(output2)
-
-
-        #Cross4
-        output1, output2 = self.cross_stitch4(x1,x2)
-
-        
-        x1 = self.block5_task1(output1)
-        
-        x2 = self.block5_task2(output2)
-
-        x1 = self.c2_task1(x1)
-        x2 = self.c2_task2(x2)
-
-
         x1 = self.c3_task1(x1)
         x2 = self.c3_task2(x2)
 
@@ -564,134 +425,17 @@ class QuartzNet_Cross4(nn.Module):
         X1_flattened = x1.view(-1, 128 * 32)
         X2_flattened = x2.view(-1, 128 * 32)
         
-        genero, edad = self.frontEnd(X1_flattened, X2_flattened)
-
-        return edad.float(), genero.float()
-        
-#------------------------ Quartz 4 cross Small-------------------------
-
-class QuartzNet_Cross2_Small(nn.Module):
-    def __init__(self, n_mels, num_classes=8, task1=0, task2=1):
-        super().__init__()
-        self.task1= task1
-        self.task2= task2
-
-        self.num_classes = num_classes
-
-        self.c1_task1 = conv_bn_act(n_mels, 64, kernel_size=33,padding=(33-1)//2, stride=2)
-        self.c1_task2 = conv_bn_act(n_mels, 64, kernel_size=33, padding=(33-1)//2, stride=2)
-        
-        self.block1_task1 = QnetBlock(64, 64, 33, 1, R=1)
-        
-        self.block2_task1 = QnetBlock(64, 128, 39, 1, R=1)
-        
-        self.block3_task1 = QnetBlock(128, 128, 51, 1, R=1)
-        
-        self.block4_task1 = QnetBlock(128, 128, 63, 1, R=1)
-       
-        self.block5_task1 = QnetBlock(128, 128, 75, 1, R=1)
-
-       
-        self.block1_task2 = QnetBlock(64, 64, 33, 1, R=1)
-        
-        self.block2_task2 = QnetBlock(64, 128, 39, 1, R=1)
-        
-        self.block3_task2 = QnetBlock(128, 128, 51, 1, R=1)
-        
-    
-        self.cross_stitch1 = CrossStitch((64*32)*2) #16384
-        self.cross_stitch2 = CrossStitch((128*32)*2)
-        
-
-        self.pooling_task1 = StatsPooling()
-        self.pooling_task2 = StatsPooling()
-
-
-        self.c2_task1 = conv_bn_act(128, 128, kernel_size=87,padding="same")
-        self.c2_task2 = conv_bn_act(128, 128, kernel_size=87,padding="same")
-
-        self.c3_task1 = conv_bn_act(128, 256, kernel_size=1)
-        self.c3_task2 = conv_bn_act(128, 256, kernel_size=1)
-
-        self.c4_task1 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
-        self.c4_task2 = conv_bn_act(256, 128, kernel_size=1, dilation=2)
-
-        self.frontEnd = FrotEnd(128 * 32, clases_age= self.num_classes, task1=self.task1, task2=self.task2)
-
-
-    def forward(self, x):
-
-        x1 = self.c1_task1(x)
-        x2 = self.c1_task2(x)
-
-        #BLOQUE 1
-
-        #Red 1
-        x1 = self.block1_task1(x1)
-        # x1 = self.pooling(x1)
-
-        #Red 2
-        x2 = self.block1_task2(x2)
-
-        #Cross1
-        output1, output2 = self.cross_stitch1(x1,x2)
-
-        #BLOQUE 2
-        #Red 1
-        x1 = self.block2_task1(output1)
-        #Red 2
-        x2 = self.block2_task2(output2)
-
-        #Cross2
-        output1, output2 = self.cross_stitch2(x1,x2)
-
-        #BLOQUE 3
-        #Red 1
-        x1 = self.block3_task1(output1)
-        
-        x2 = self.block3_task2(output2)
-
-        #Cross3
-        # output1, output2 = self.cross_stitch3(x1,x2)
-    
-        x1 = self.block4_task1(x1)
-        
-        # x2 = self.block4_task2(x2)
-
-
-        #Cross4
-        # output1, output2 = self.cross_stitch4(x1,x2)
-
-        
-        x1 = self.block5_task1(x1)
-        
-        # x2 = self.block5_task2(output2)
-
-        x1 = self.c2_task1(x1)
-        x2 = self.c2_task2(x2)
-
-
-        x1 = self.c3_task1(x1)
-        x2 = self.c3_task2(x2)
-
-
-        x1 = self.c4_task1(x1)
-        x2 = self.c4_task2(x2)
-
-        X1_flattened = x1.view(-1, 128 * 32)
-        X2_flattened = x2.view(-1, 128 * 32)
-        
-        genero, edad = self.frontEnd(X1_flattened, X2_flattened)
+        genero, edad = self.frontEnd(X1_flattened, X2_flattened, label_age)
 
         return edad.float(), genero.float()
         
 
 # ------------------------------------ D-Vector ---------------------------------------------------
 
-class LSTMDvector_Gender(nn.Module):
+class LSTMDvector(nn.Module):
     """LSTM-based d-vector."""
-    def __init__(self, input_size, hidden_size=256 , embedding_size=256, num_layers=3,task=3, num_classes=3):
-        super(LSTMDvector_Gender, self).__init__()
+    def __init__(self, input_size, hidden_size=256 , embedding_size=256, num_layers=3,task=3, num_classes=8):
+        super(LSTMDvector, self).__init__()
 
         self.task= task
         self.num_layers=num_layers
@@ -708,70 +452,11 @@ class LSTMDvector_Gender(nn.Module):
         self.linear = nn.Linear(hidden_size, embedding_size)
         self.relu= nn.ReLU()
 
-        self.frontEnd = nn.Sequential(
-            nn.Linear(embedding_size,embedding_size),
-            nn.ReLU(),
-            nn.BatchNorm1d(embedding_size),
-            nn.Linear(embedding_size,1),
-            nn.Sigmoid()
-        )
+        self.frontEnd = FrotEnd(embedding_size,task=self.task, clases_age= self.num_classes)
 
     def forward(self, x):
         # Set initial hidden and cell states
 
-        batch_size = x.size(0)
-        # x = x.unsqueeze(1)  # Add a batch dimension
-        h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
-        c0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()
-
-        lstm_out1, _ = self.lstm1(x, (h0, c0))
-        lstm_out2, _ = self.lstm2(lstm_out1)
-        lstm_out3, _ = self.lstm3(lstm_out2)
-
-        d_vector = self.linear(lstm_out1[:, -1, :])
-
-        if self.task==3:
-            class_edad, genero, edad_num = self.frontEnd(d_vector)
-
-            return class_edad.float(), genero.float(), edad_num.float()
-        else:
-            single_class = self.frontEnd(d_vector)
-
-            return single_class.float()
-
-# ------------------------------------ D-Vector ---------------------------------------------------
-
-class LSTMDvector_Age(nn.Module):
-    """LSTM-based d-vector."""
-    def __init__(self, input_size, hidden_size=256 , embedding_size=256, num_layers=3,task=1, num_classes=3):
-        super(LSTMDvector_Age, self).__init__()
-
-        self.task= task
-        self.num_layers=num_layers
-        self.hidden_size= hidden_size
-        self.num_classes = num_classes
-        
-        self.lin = nn.Linear(input_size, input_size)
-        self.norm = nn.BatchNorm1d(1)
-        self.lstm1 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
-        self.lstm2 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
-        self.lstm3 = nn.LSTM(input_size, hidden_size, num_layers=num_layers,dropout=0.3, batch_first=True)
-
-        # Capa lineal para obtener el d-vector
-        self.linear = nn.Linear(hidden_size, embedding_size)
-        self.relu= nn.ReLU()
-
-        self.frontEnd = nn.Sequential(
-            nn.Linear(embedding_size,embedding_size),
-            nn.ReLU(),
-            nn.BatchNorm1d(embedding_size),
-            nn.Linear(embedding_size,3),
-            nn.Softmax()
-        )
-
-    def forward(self, x):
-        # Set initial hidden and cell states
-        print(x.shape)
         batch_size = x.size(0)
         # x = x.unsqueeze(1)  # Add a batch dimension
         h0 = torch.zeros(self.num_layers, batch_size, self.hidden_size).requires_grad_()

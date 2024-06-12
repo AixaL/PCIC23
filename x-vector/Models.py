@@ -258,7 +258,7 @@ class LSTMDvector(nn.Module):
         lstm_out2, _ = self.lstm2(lstm_out1)
         lstm_out3, _ = self.lstm3(lstm_out2)
 
-        d_vector = self.linear(lstm_out1[:, -1, :])
+        d_vector = self.linear(lstm_out3[:, -1, :])
 
         if self.task==3:
             class_edad, genero, edad_num = self.frontEnd(d_vector)
